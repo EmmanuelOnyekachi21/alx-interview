@@ -1,41 +1,25 @@
 #!/usr/bin/node
-/**
- * Wrapper function for request object that allows it
- * to work with async and await
- * @param   {String} url - site url
- * @returns {Promise}    - promise object that resolves
- *                         with parsed JSON response
- *                         and rejects with the request error.
- */
-function makeRequest (url) {
-  const request = require('request');
-  return new Promise((resolve, reject) => {
-    request.get(url, (error, response, body) => {
-      if (error) reject(error);
-      else resolve(JSON.parse(body));
-    });
+const request = require('request');
+const API_URL = 'https://swapi-api.hbtn.io/api';
+
+if (process.argv.length > 2) {
+  request(`${API_URL}/films/${process.argv[2]}/`, (err, _, body) => {
+    if (err) {
+      console.log(err);
+    }
+    const charactersURL = JSON.parse(body).characters;
+    const charactersName = charactersURL.map(
+      url => new Promise((resolve, reject) => {
+        request(url, (promiseErr, __, charactersReqBody) => {
+          if (promiseErr) {
+            reject(promiseErr);
+          }
+          resolve(JSON.parse(charactersReqBody).name);
+        });
+      }));
+
+    Promise.all(charactersName)
+      .then(names => console.log(names.join('\n')))
+      .catch(allErr => console.log(allErr));
   });
 }
-
-/**
- * Entry point - makes requests to Star Wars API
- * for movie info based movie ID passed as a CLI parameter.
- * Retrieves movie character info then prints their names
- * in order of appearance in the initial response.
- */
-async function main () {
-  const args = process.argv;
-
-  if (args.length < 3) return;
-
-  const movieUrl = 'https://swapi-api.alx-tools.com/api/films/' + args[2];
-  const movie = await makeRequest(movieUrl);
-
-  if (movie.characters === undefined) return;
-  for (const characterUrl of movie.characters) {
-    const character = await makeRequest(characterUrl);
-    console.log(character.name);
-  }
-}
-
-main();
