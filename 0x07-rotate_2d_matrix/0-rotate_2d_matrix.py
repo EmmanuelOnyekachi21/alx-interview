@@ -1,5 +1,9 @@
 #!/usr/bin/python3
-"""A Script that contains a function which rotates a 2D matrix"""
+"""
+A Script that contains a function which rotates a 2D matrix.
+
+Complete 2D matrix rotation challenge
+"""
 
 
 def deep_copy(matrix):
